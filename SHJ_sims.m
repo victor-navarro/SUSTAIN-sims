@@ -1,17 +1,20 @@
 %Shepard, Hovland and Jenkins SUSTAIN sims.
 
-%cd('/Users/edwardwasserman/Google Drive/Wasserman''s Lab/MATLAB/SUSTAIN/')
-%clc
-%clear all
-%close all
+cd('/Users/edwardwasserman/Google Drive/Wasserman''s Lab/MATLAB/SUSTAIN/')
+clc
+clear all
+close all
 
 %set custom string for filenames (only for saving purposes)
-custom = 'asd';
+custom = '';
+
+%choose to save the data or not
+save_data = 1;
 
 %load category structures from SHJ
 load SHJ_cats
 
-cat_type = 4; %select category type (1?6)
+cat_type = 1; %select category type (1?6)
 arr = randi(size(cats(cat_type).stim, 3)); %pick arrangement at random just because we can
 raw = cats(cat_type).stim(:, :, arr); %get stimuli
 o_set = zeros(8, 8); %preallocate original training set. Each stimulus has 3+1 dimensions and each can take two dimensional values.
@@ -49,14 +52,23 @@ blocks = 16;
 iter_data = [];
 
 for iter = 1:iterations
-    %fprintf('Iteration: %d\n', iter)
+    fprintf('Iteration: %d\n', iter)
     
     %repeat and shuffle training schedule
-    t_set = repmat(o_set, blocks, 1);
+    t_set = repmat(o_set, blocks*2, 1);
     indices = zeros(size(t_set, 1), 1);
+    
     for x = 1:blocks
-        indices(8*(x-1)+1:8*(x-1)+8, 1) = randperm(8);
+        if x == 1
+            indices(1:8) = randperm(8);
+            indices(9:16) = randperm(8);
+        else
+            indices(16*(x-1)+1:16*(x-1)+16, 1) = randperm(16);
+        end
+        
     end
+    do_set = repmat(o_set, 2, 1); %double o_set, to create the super blocks from nosofsky
+    
     t_set = t_set(indices, :); %shuffle training set
     
     h = []; %initialize an empty hidden layer (cluster coordinates)
@@ -114,7 +126,7 @@ end
 %get means
 h1 = zeros(8, 3);
 for t = 1:blocks
-    h1(t, :) = [t, mean(iter_data(ceil(iter_data(:, 2)/8) == t, 3)), mean(iter_data(ceil(iter_data(:, 2)/8) == t, 4))];
+    h1(t, :) = [t, mean(iter_data(ceil(iter_data(:, 2)/16) == t, 3)), mean(iter_data(ceil(iter_data(:, 2)/16) == t, 4))];
 end
 
 %get counts
@@ -139,14 +151,17 @@ subplot(2, 2, 4)
 hist(h2(:, 2));
 ylabel('Count');
 xlabel('Clusters')
-saveas(x, sprintf('./plots/%s(T%d)_%d_iterations_%s.jpg', custom, cat_type, iterations, date))
 
-%save data
-full_name = sprintf('./data/%sT%d_%d_iterations_full_%s.mat', custom, cat_type, iterations, date);
-mean_name = sprintf('./data/%sT%d_%d_iterations_mean_%s.mat', custom, cat_type, iterations, date);
-counts_name = sprintf('./data/%sT%d_%d_iterations_counts_%s.mat', custom, cat_type, iterations, date);
+if(save_data)
+    saveas(x, sprintf('./plots/%s(T%d)_%d_iterations_%s.jpg', custom, cat_type, iterations, date))
 
-save(full_name,'iter_data')
-save(mean_name,'h1')
-save(counts_name,'h2')
+    %save data
+    full_name = sprintf('./data/%sT%d_%d_iterations_full_%s.mat', custom, cat_type, iterations, date);
+    mean_name = sprintf('./data/%sT%d_%d_iterations_mean_%s.mat', custom, cat_type, iterations, date);
+    counts_name = sprintf('./data/%sT%d_%d_iterations_counts_%s.mat', custom, cat_type, iterations, date);
+
+    save(full_name,'iter_data');
+    save(mean_name,'h1');
+    save(counts_name,'h2');
+end
 
