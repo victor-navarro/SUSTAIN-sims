@@ -1,4 +1,5 @@
 # SUSTAIN-sims
 Some simulations using the SUSTAIN model (Love, Gureckis &amp; Medin, 2004)
 
-SHJ_sims.m is the main script. The MATLAB script outputs both .mat files with the data, and .jpg files with some plots.
+The simulation of each experiment is stored in each folder. SHJ_sims contains the original simulations from Love, et al.
+conSHJ_sims contains the simulation of our concurrent training experiment.
